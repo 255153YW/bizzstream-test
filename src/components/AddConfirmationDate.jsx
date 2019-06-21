@@ -1,38 +1,33 @@
 import React from 'react';
+import DatePicker from "react-datepicker";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 export default class AddConfirmationDate extends React.Component {
     constructor(props){
         super(props);
     
         this.state={
-            type:undefined,
-            name:"",
-            label:"",
-            maxLength:0
+            requestDate:undefined,
+            confirmDate:undefined
         }
     }
 
-    handleInputChangeAction(stateName, event){
+    handleInputChangeAction(stateName, date){
         this.setState({
-            [stateName]:event.target.value
+            [stateName]:date
         });
     }
 
     componentWillUnmount(){
         this.setState({
-            fieldType:undefined,
-            labelText:""
+            requestDate:undefined,
+            confirmDate:undefined
         });
     }
 
     handleSubmitAction(){
-        let columnData={
-            type:this.state.type,
-            name:this.state.name,
-            label:this.state.label,
-            maxLength:this.state.maxLength
-        }
-        this.props.addNewColumn(columnData);
+        this.props.addConfirmationRequest(this.state.requestDate, this.state.confirmDate);
     }
 
     render() {
@@ -42,32 +37,23 @@ export default class AddConfirmationDate extends React.Component {
                     <span className="close" onClick={this.props.closeModal}>&times;</span>
                     
                     <div>
-                        <label htmlFor="type">Input Type:</label>
-                        <select name="type" 
-                        value={this.state.type} onChange={this.handleInputChangeAction.bind(this,"type")}>
-                            <option value={""}></option>
-                            <option value={"text"}>text</option>
-                            <option value={"number"}>Number</option>
-                        </select>
-
-                        {this.state.type === "text" &&
-                            <React.Fragment>
-                                <br/>
-                                <label htmlFor="maxLength">Max Length:</label>
-                                <input name="maxLength" className="w-input"  value={this.state.maxLength} type="number" required 
-                                onChange={this.handleInputChangeAction.bind(this,"maxLength")}/>
-                            </React.Fragment>
-                        }
-                        
                         <br/>
-                        <label htmlFor="name">Input name:</label>
-                        <input name="name" className="w-input"  value={this.state.name} type="text" required 
-                        onChange={this.handleInputChangeAction.bind(this,"name")}/>
+                        <label htmlFor="requestDate">Start Date:</label>
+                        <DatePicker selected={this.state.requestDate} onChange={this.handleInputChangeAction.bind(this,"requestDate")}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        timeCaption="time"/>
 
                         <br/>
-                        <label htmlFor="label">Input label:</label>
-                        <input name="label" className="w-input"  value={this.state.label} type="text" required 
-                        onChange={this.handleInputChangeAction.bind(this,"label")}/>
+                        <label htmlFor="confirmDate">End Date:</label>
+                        <DatePicker selected={this.state.confirmDate} onChange={this.handleInputChangeAction.bind(this,"confirmDate")}
+                        showTimeSelect
+                        timeFormat="HH:mm"
+                        timeIntervals={15}
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        timeCaption="time"/>
 
                         <br/>
                         <input type="button" value="submit" onClick={this.handleSubmitAction.bind(this)}/>

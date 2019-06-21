@@ -71,7 +71,7 @@ export default class ShowStatus extends React.Component {
             else{
                 return this.renderStatusSignCompleted("Confirmed")
             }
-        }else if(!isConfirmed && confirmationRequestsLength > 1){
+        }else if(((!isConfirmed && confirmationRequestsLength > 1) || confirmationRequestsLength === 1)){
             return this.renderStatusSignActionRequired("To confirm change");
         }else{
             return <div>invalid confirmationRequests</div>
@@ -93,7 +93,6 @@ export default class ShowStatus extends React.Component {
 
     renderStatusByUserType(){
         let statusData = this.props.statusData;
-        console.log(statusData);
         switch(statusData && statusData.userType){
             case 'BACK_OFFICE':
                 return this.renderStatusBackOffice(statusData);
