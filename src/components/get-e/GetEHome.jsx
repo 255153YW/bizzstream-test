@@ -1,6 +1,5 @@
 import React from 'react';
 import ShowStatus from './ShowStatus';
-import AddConfirmationDate from './AddConfirmationDate';
 
 var moment = require('moment');
 
@@ -17,18 +16,40 @@ export default class GetEHome extends React.Component {
             isCancelled:false,
             isClosed:false,
             submittedStatus:undefined,
-            showModal:false
+            withTracking:undefined,
+            pickUpTimePassed:false,
         }
     }
 
-    toggleModal(condition){
+    deepCopy(data){
+        return JSON.parse(JSON.stringify(data));
+    }
+
+    dropPassengerOff(){
+        this.addConfirmationRequest(new Date(),false);
+
+        if(this.state.withTracking === true){
+            this.setState({
+                selectedTrackingStatus:this.state.trackingStatus[4]
+            });
+        }else{
+            this.setState({
+                selectedTrackingStatus:this.state.trackingStatus[0]
+            });
+        }
+
         this.setState({
-            showModal:condition
+            isClosed:true
+        });
+    }
+
+    setWithTracking(condition){
+        this.setState({
+            withTracking:condition
         });
     }
 
     addConfirmationRequest(requestDate, confirmDate){
-        this.toggleModal(false);
         if(requestDate){
             requestDate = moment(requestDate).format();
         }else{
@@ -40,22 +61,14 @@ export default class GetEHome extends React.Component {
         }else{
             confirmDate = null;
         }
+
         let confirmationRequest = {
             requestedAt:requestDate,
             confirmedAt:confirmDate
         }
 
-        let copyState = this.state.confirmationRequests.slice();
+        let copyState = this.deepCopy(this.state.confirmationRequests);
         copyState.push(confirmationRequest);
-
-        this.setState({
-            confirmationRequests:copyState
-        });
-    }
-
-    removeConfirmationRequest(index){
-        let copyState = this.state.confirmationRequests.slice();
-        copyState.splice(index,1);
 
         this.setState({
             confirmationRequests:copyState
@@ -72,18 +85,33 @@ export default class GetEHome extends React.Component {
         }else if(newValue === ""){
             newValue = undefined;
         }
+
+        if(stateName === "withTracking" && newValue === false){
+            this.setState({
+                selectedTrackingStatus:this.state.trackingStatus[0]
+            });
+        }
+
         this.setState({
             [stateName]:newValue
         });
     }
 
+    handleCancelAction(){
+        this.addConfirmationRequest(new Date(),false);
+        this.setState({
+            isCancelled:true
+        });
+    }
+
     handleSubmitAction(){
         let mockData = {
-            userType: this.state.selectedUserType,
-            confirmationRequests:this.state.confirmationRequests,
-            trackingStatus: this.state.selectedTrackingStatus,
-            isCancelled: this.state.isCancelled,
-            isClosed: this.state.isClosed
+            userType: this.deepCopy(this.state.selectedUserType),
+            confirmationRequests:this.deepCopy(this.state.confirmationRequests),
+            trackingStatus: this.deepCopy(this.state.selectedTrackingStatus),
+            isCancelled: this.deepCopy(this.state.isCancelled),
+            isClosed: this.deepCopy(this.state.isClosed),
+            pickUpTimePassed: this.deepCopy(this.state.pickUpTimePassed)
         }
 
         this.setState({
@@ -91,9 +119,49 @@ export default class GetEHome extends React.Component {
         });
     }
 
+    handleResetAction(){
+        this.setState({
+            selectedUserType:"",
+            confirmationRequests:[],
+            selectedTrackingStatus:"",
+            isCancelled:false,
+            isClosed:false,
+            submittedStatus:undefined,
+            withTracking:undefined,
+        });
+    }
+
+    handleConfirmRequestAction(){
+        let confirmationRequestLength = this.state.confirmationRequests.length;
+        let lastConfirmation;
+        if(confirmationRequestLength > 0){
+            lastConfirmation = this.state.confirmationRequests[confirmationRequestLength-1];
+        }
+
+        if(lastConfirmation && !lastConfirmation.confirmedAt){
+            let copyState = this.deepCopy(this.state.confirmationRequests);
+            copyState[confirmationRequestLength-1].confirmedAt = moment(new Date()).format();
+            this.setState({
+                confirmationRequests:copyState
+            });
+        }
+        
+    }
+
     renderDropdownOptions(stateName){
         let optionList = this.state[stateName];
         if(Array.isArray(optionList)){
+            if(stateName === "trackingStatus"){
+                //remove the first element "NOT_TRACKING" from the list
+                if(this.state.withTracking === true){
+                    optionList = optionList.slice();
+                    optionList.splice(0,1);
+                }
+
+                //remove the last element "PASSENGER_DROPPED_OFF" from the list
+                optionList = optionList.slice();
+                optionList.splice(optionList.length-1,1);
+            }
             return optionList.map((option,index)=>{
                 return(
                     <option value={option} key={`${stateName}-${index}`}>{option}</option>
@@ -125,7 +193,6 @@ export default class GetEHome extends React.Component {
                     <br/>
                     confirmed at: {confirmedAt}
                     <br/>
-                    <input type="button" value="remove" onClick={this.removeConfirmationRequest.bind(this, index)}/>
                     <br/>
                     <br/>
                 </div>
@@ -134,9 +201,14 @@ export default class GetEHome extends React.Component {
     }
 
     render() {
+        let confirmationRequestLength = this.state.confirmationRequests.length;
+        let lastConfirmation;
+        if(confirmationRequestLength > 0){
+            lastConfirmation = this.state.confirmationRequests[confirmationRequestLength-1];
+        }
         return (
             <div>
-                <h2>fake data generator</h2>
+                <h2>booking simulator</h2>
                 <label htmlFor="selectedUserType">user Type:</label>
                 <select name="selectedUserType" 
                 value={this.state.selectedUserType} onChange={this.handleInputChangeAction.bind(this,"selectedUserType")}>
@@ -144,53 +216,112 @@ export default class GetEHome extends React.Component {
                     {this.renderDropdownOptions("userTypes")}
                 </select>
 
-                <br/>
-                <label htmlFor="selectedTrackingStatus">Input Type:</label>
-                <select name="selectedTrackingStatus" 
-                value={this.state.type} onChange={this.handleInputChangeAction.bind(this,"selectedTrackingStatus")}>
-                    <option value={""}></option>
-                    {this.renderDropdownOptions("trackingStatus")}
-                </select>
+                {this.state.selectedUserType !== "" &&
+                    <React.Fragment>
+                        <br/>
+                        <label>Confirmation request:</label>
+                        {this.renderConfirmationRequests()}
+                        {(this.state.isCancelled === false && this.state.isClosed === false &&
+                            (confirmationRequestLength === 0 || (confirmationRequestLength > 0 && lastConfirmation && lastConfirmation.confirmedAt))
+                        )
+                            &&
+                            <input type="button" value="add another confirmation request" onClick={this.addConfirmationRequest.bind(this, new Date(),false)}/>
+                        }
 
-                <br/>
-                <label>Confirmation request:</label>
-                {this.renderConfirmationRequests()}
-                <input type="button" value="add confirmation request" onClick={this.toggleModal.bind(this, true)}/>
+                        {lastConfirmation && lastConfirmation.confirmedAt && this.state.isCancelled === false && this.state.isClosed === false &&
+                            <React.Fragment>
+                                <br/>
+                                <br/>
+                                
+                                {this.state.withTracking !== undefined 
+                                ?
+                                    <React.Fragment>
+                                        <label htmlFor="selectedTrackingStatus">tracking status:</label>
+                                        {this.state.withTracking === true || this.state.isClosed === true
+                                        ?
+                                        <React.Fragment>
+                                            <select name="selectedTrackingStatus" 
+                                            value={this.state.selectedTrackingStatus} onChange={this.handleInputChangeAction.bind(this,"selectedTrackingStatus")}>
+                                                <option value={""}></option>
+                                                {this.renderDropdownOptions("trackingStatus")}
+                                            </select>
+                                            <br/>
+                                            <input type="button" value="drop passenger off" onClick={this.dropPassengerOff.bind(this)}/>
+                                        </React.Fragment>     
+                                        :
+                                        <React.Fragment>
+                                            {this.state.selectedTrackingStatus}
+                                            <br/>
+                                            <input type="checkbox" checked={this.state.pickUpTimePassed} 
+                                            onChange={this.handleInputChangeAction.bind(this,"pickUpTimePassed")}/> Pick-up time passed
+                                            <br/>
+                                            {this.state.pickUpTimePassed &&
+                                                <input type="button" value="drop off time passed" onClick={this.dropPassengerOff.bind(this)}/>
+                                            }
+                                        </React.Fragment>
+                                        
+                                        }
+                                        
+                                    </React.Fragment>
+                                :
+                                    <React.Fragment>
+                                        <label htmlFor="withTracking">withTracking</label>
+                                        <select name="withTracking" 
+                                        value={this.state.withTracking} onChange={this.handleInputChangeAction.bind(this,"withTracking")}>
+                                            <option value={undefined}></option>
+                                            <option value={false}>false</option>
+                                            <option value={true}>true</option>
+                                        </select>
+                                    </React.Fragment>
+                                }
+                            
+                            <br/>
+                            <br/>
+                            </React.Fragment>
+                        }
 
-                <br/>
-                <label htmlFor="isCancelled">is cancelled:</label>
-                <select name="isCancelled" 
-                value={this.state.isCancelled} onChange={this.handleInputChangeAction.bind(this,"isCancelled")}>
-                    <option value={false}>false</option>
-                    <option value={true}>true</option>
-                </select>
-
-                <br/>
-                <label htmlFor="isClosed">is closed:</label>
-                <select name="isClosed" 
-                value={this.state.isClosed} onChange={this.handleInputChangeAction.bind(this,"isClosed")}>
-                    <option value={false}>false</option>
-                    <option value={true}>true</option>
-                </select>
-
-                <br/>
-                <input type="button" value="submit" onClick={this.handleSubmitAction.bind(this)}/>
-
-
-                <br/>
-                <br/>
-                <br/>
-                <h2>MyStatus</h2>
-                {this.state.submittedStatus &&
-                    <ShowStatus statusData={this.state.submittedStatus}/>
+                        {this.state.isCancelled === true && 
+                            (lastConfirmation && lastConfirmation.confirmedAt 
+                                ?
+                                "Booking cancelled"
+                                :
+                                "Booking cancellation triggered, please click 'update MyStatus' with user type 'BACK_OFFICE' to confirm"
+                            )
+                        }
+                        
+                        
+                    </React.Fragment>
                 }
-                {this.state.showModal &&
-                    <AddConfirmationDate 
-                    closeModal={this.toggleModal.bind(this, false)}
-                    addConfirmationRequest={this.addConfirmationRequest.bind(this)}/>
+
+                <br/>
+                {this.state.selectedUserType !== "" && lastConfirmation &&
+                    <React.Fragment>
+                        <input type="button" value="update MyStatus" onClick={this.handleSubmitAction.bind(this)}/>
+                        {this.state.isCancelled === false && this.state.isClosed === false &&
+                            <input type="button" value="cancel booking" onClick={this.handleCancelAction.bind(this)}/>
+                        }
+                        
+                        <input type="button" value="start over" onClick={this.handleResetAction.bind(this)}/>
+                    </React.Fragment>
+                }
+                
+                <br/>
+                <br/>
+                <br/>
+                {this.state.selectedUserType !== "" && lastConfirmation &&
+                    <React.Fragment>
+                        <h2>MyStatus</h2>
+                        {this.state.submittedStatus &&
+                            <ShowStatus statusData={this.state.submittedStatus}/>
+                        }
+
+                        <h2>MyAction</h2>
+                        {this.state.submittedStatus && lastConfirmation && !lastConfirmation.confirmedAt && 
+                            <input type="button" value="confirm" onClick={this.handleConfirmRequestAction.bind(this)}/>
+                        }
+                    </React.Fragment>
                 }
             </div>
-            
         );
     }
 }

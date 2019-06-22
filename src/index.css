@@ -63,4 +63,29 @@ label{
   color: black;
   text-decoration: none;
   cursor: pointer;
-} 
+}
+
+.status{
+  display: inline-block;
+  color:#fff;
+  padding:0.5em 1em;
+  border-radius:50px;
+  height:1em;
+  line-height: 1em;
+}
+
+.status-action-required{
+  background-color: #ff9c00;
+}
+
+.status-cancelled{
+  background-color: #a3a3a3;
+}
+
+.status-active{
+  background-color: #53b358;
+}
+
+.status-completed{
+  background-color: #4384fb;
+}
