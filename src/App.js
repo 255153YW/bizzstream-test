@@ -2,9 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
 import Home from 'components/Home';
-import GetEHome from 'components/GetEHome';
+import GetEHome from 'components/get-e/GetEHome';
 import LayoutStoreProvider from "providers/LayoutStoreProvider";
-import MaxedyHome from "components/MaxedyHome";
+import MaxedyHome from "components/maxedy/MaxedyHome";
 
 function App() {
   return (

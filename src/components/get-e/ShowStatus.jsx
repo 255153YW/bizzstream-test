@@ -35,7 +35,7 @@ export default class ShowStatus extends React.Component {
         let pickUpTimePassed = false;
         let dropOffTimePassed = false;
 
-        if(confirmationRequests[confirmationRequestsLength-1].confirmedAt){
+        if(confirmationRequestsLength > 0 && confirmationRequests[confirmationRequestsLength-1].confirmedAt){
             isConfirmed = true;
         }
 
