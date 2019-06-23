@@ -1,33 +1,8 @@
 import React from 'react';
 import RenderStatus from './RenderStatus';
+import RenderStatusWithAction from './RenderStatusWithAction';
 
 export default class ShowStatusSupplier extends React.Component {
-
-    renderStatusSignCancelled(text){
-        return (
-            <div className="status status-cancelled">{text}</div>
-        )
-    }
-
-    renderStatusSignActionRequired(text){
-        return (
-            <div className="status status-action-required">{text}</div>
-        )
-    }
-
-    renderStatusSignCompleted(text){
-        return (
-            <div className="status status-completed">{text}</div>
-        )
-    }
-
-
-    renderStatusSignActive(text){
-        return (
-            <div className="status status-active">{text}</div>
-        )
-    }
-
 
     renderStatusByUserType(){
         let statusData = this.props.statusData;
@@ -36,6 +11,8 @@ export default class ShowStatusSupplier extends React.Component {
         let isConfirmed;
         let noTracking = statusData.trackingStatus === "NOT_TRACKING";
         let pickUpTimePassed = statusData.pickUpTimePassed;
+
+        let confirmRequestAction = this.props.confirmRequestAction;
 
         if(confirmationRequestsLength > 0 && confirmationRequests[confirmationRequestsLength-1].confirmedAt){
             isConfirmed = true;
@@ -52,7 +29,7 @@ export default class ShowStatusSupplier extends React.Component {
                         return <RenderStatus type={"completed"} text={"Completed (not tracking based)"}/>;
                     }
                     else if(pickUpTimePassed){
-                        return <RenderStatus type={"active"} text={"Active"}/>;
+                        return <RenderStatus type={"active"} text={"Active (not tracking based)"}/>;
                     }else{
                         return <RenderStatus type={"completed"} text={"Confirmed"}/>;
                     }
@@ -71,16 +48,32 @@ export default class ShowStatusSupplier extends React.Component {
         }
         else if(!isConfirmed){
             if(statusData.isClosed){
-                if(noTracking){
-                    return  <RenderStatus type={"action-required"} text={"To Close (not tracking based)"}/>;
+                if(noTracking){   
+                    return  <RenderStatusWithAction 
+                        status={<RenderStatus type={"action-required"} text={"To Close (not tracking based)"}/>}
+                        statusAction={confirmRequestAction}
+                        statusActionText={"Confirm close"}
+                        />;
                 }else{
-                    return <RenderStatus type={"action-required"} text={"To Close"}/>;
+                    return <RenderStatusWithAction 
+                        status={<RenderStatus type={"action-required"} text={"To Close"}/>}
+                        statusAction={confirmRequestAction}
+                        statusActionText={"Confirm close"}
+                        />;
                 }
             }
             else if(confirmationRequestsLength > 1){
-                return <RenderStatus type={"action-required"} text={"To confirm change"}/>;
+                return <RenderStatusWithAction 
+                status={<RenderStatus type={"action-required"} text={"To confirm change"}/>}
+                statusAction={confirmRequestAction}
+                statusActionText={"Confirm change"}
+                />;
             }else if(confirmationRequestsLength === 1){
-                return <RenderStatus type={"action-required"} text={"To confirm"}/>;
+                return <RenderStatusWithAction 
+                status={<RenderStatus type={"action-required"} text={"To confirm"}/>}
+                statusAction={confirmRequestAction}
+                statusActionText={"Confirm"}
+                />;
             }else{
                 return <div>invalid confirmationRequests</div>
             }

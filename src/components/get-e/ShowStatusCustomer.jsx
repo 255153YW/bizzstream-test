@@ -23,7 +23,7 @@ export default class ShowStatusSupplier extends React.Component {
                     return <RenderStatus type={"completed"} text={"Completed (not tracking based)"}/>;
                 }
                 else{
-                    return <RenderStatus type={"active"} text={"Active"}/>;
+                    return <RenderStatus type={"active"} text={"Active (not tracking based)"}/>;
                 }
             }
             else{

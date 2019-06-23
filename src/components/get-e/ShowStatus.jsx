@@ -7,11 +7,12 @@ export default class ShowStatus extends React.Component {
     
     renderStatusByUserType(){
         let statusData = this.props.statusData;
+        let confirmRequestAction = this.props.confirmRequestAction;
         switch(statusData && statusData.userType){
             case 'BACK_OFFICE':
-                return <ShowStatusBackOffice statusData={statusData}/>;
+                return <ShowStatusBackOffice statusData={statusData} confirmRequestAction={confirmRequestAction}/>;
             case 'SUPPLIER':
-                return <ShowStatusSupplier statusData={statusData}/>;
+                return <ShowStatusSupplier statusData={statusData} confirmRequestAction={confirmRequestAction}/>;
             case 'CUSTOMER':
                 return <ShowStatusCustomer statusData={statusData}/>;
             default:

@@ -22,7 +22,11 @@ export default class GetEHome extends React.Component {
     }
 
     deepCopy(data){
-        return JSON.parse(JSON.stringify(data));
+        if(data === undefined || data === null){
+            return data;
+        }else{
+            return JSON.parse(JSON.stringify(data));
+        }
     }
 
     dropPassengerOff(){
@@ -101,7 +105,7 @@ export default class GetEHome extends React.Component {
         this.addConfirmationRequest(new Date(),false);
         this.setState({
             isCancelled:true
-        });
+        },this.handleSubmitAction.bind(this));
     }
 
     handleSubmitAction(){
@@ -143,7 +147,7 @@ export default class GetEHome extends React.Component {
             copyState[confirmationRequestLength-1].confirmedAt = moment(new Date()).format();
             this.setState({
                 confirmationRequests:copyState
-            });
+            },this.handleSubmitAction.bind(this));
         }
         
     }
@@ -285,7 +289,7 @@ export default class GetEHome extends React.Component {
                                 ?
                                 "Booking cancelled"
                                 :
-                                "Booking cancellation triggered, please click 'update MyStatus' with user type 'BACK_OFFICE' to confirm"
+                                "Booking cancellation triggered, please confirm with user type 'BACK_OFFICE'"
                             )
                         }
                         
@@ -312,12 +316,7 @@ export default class GetEHome extends React.Component {
                     <React.Fragment>
                         <h2>MyStatus</h2>
                         {this.state.submittedStatus &&
-                            <ShowStatus statusData={this.state.submittedStatus}/>
-                        }
-
-                        <h2>MyAction</h2>
-                        {this.state.submittedStatus && lastConfirmation && !lastConfirmation.confirmedAt && 
-                            <input type="button" value="confirm" onClick={this.handleConfirmRequestAction.bind(this)}/>
+                            <ShowStatus statusData={this.state.submittedStatus} confirmRequestAction={this.handleConfirmRequestAction.bind(this)}/>
                         }
                     </React.Fragment>
                 }

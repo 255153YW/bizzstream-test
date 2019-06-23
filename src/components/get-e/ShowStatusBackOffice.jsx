@@ -1,33 +1,8 @@
 import React from 'react';
 import RenderStatus from './RenderStatus';
+import RenderStatusWithAction from './RenderStatusWithAction';
 
 export default class ShowStatusBackOffice extends React.Component {
-
-    renderStatusSignCancelled(text){
-        return (
-            <div className="status status-cancelled">{text}</div>
-        )
-    }
-
-    renderStatusSignActionRequired(text){
-        return (
-            <div className="status status-action-required">{text}</div>
-        )
-    }
-
-    renderStatusSignCompleted(text){
-        return (
-            <div className="status status-completed">{text}</div>
-        )
-    }
-
-
-    renderStatusSignActive(text){
-        return (
-            <div className="status status-active">{text}</div>
-        )
-    }
-
 
     renderStatusByUserType(){
         let statusData = this.props.statusData;
@@ -36,6 +11,8 @@ export default class ShowStatusBackOffice extends React.Component {
         let isConfirmed;
         let noTracking = statusData.trackingStatus === "NOT_TRACKING";
         let pickUpTimePassed = statusData.pickUpTimePassed;
+
+        let confirmRequestAction = this.props.confirmRequestAction;
 
         if(confirmationRequestsLength > 0 && confirmationRequests[confirmationRequestsLength-1].confirmedAt){
             isConfirmed = true;
@@ -50,7 +27,7 @@ export default class ShowStatusBackOffice extends React.Component {
                         return <RenderStatus type={"completed"} text={"Completed (not tracking based)"}/>;
                     }
                     else if(pickUpTimePassed){
-                        return <RenderStatus type={"active"} text={"Active"}/>;
+                        return <RenderStatus type={"active"} text={"Active (not tracking based)"}/>;
                     }else{
                         return <RenderStatus type={"completed"} text={"Confirmed"}/>;
                     }
@@ -69,7 +46,11 @@ export default class ShowStatusBackOffice extends React.Component {
         }
         else if(!isConfirmed){
             if(statusData.isCancelled){
-                return <RenderStatus type={"action-required"} text={"To confirm cancel"}/>;
+                return <RenderStatusWithAction 
+                status={<RenderStatus type={"action-required"} text={"To confirm cancel"}/>}
+                statusAction={confirmRequestAction}
+                statusActionText={"Confirm cancel"}
+                />;
             }
             else if(statusData.isClosed){
                 if(noTracking){
